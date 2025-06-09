@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Password Manager (Web)</title>
+    <style>
+        body { font-family: Arial; padding: 20px; background: #f0f0f0; }
+        h1 { color: #333; }
+        form { margin-top: 20px; background: white; padding: 20px; border-radius: 10px; }
+        input[type="text"], input[type="email"] { width: 100%; padding: 8px; margin-bottom: 10px; border-radius: 4px; border: 1px solid #ccc; }
+        input[type="submit"], button { padding: 10px 15px; border: none; border-radius: 5px; background: #28a745; color: white; cursor: pointer; margin-top: 10px; }
+        .result { margin-top: 20px; }
+        .message { margin-top: 10px; color: green; }
+        .error { margin-top: 10px; color: red; }
+    </style>
+    <script>
+        function generatePassword() {
+            const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+            const numbers = '0123456789';
+            const symbols = '!#$%&()*+';
+            let passwordList = [];
+
+            for (let i = 0; i < Math.floor(Math.random() * 3) + 8; i++) {
+                passwordList.push(letters[Math.floor(Math.random() * letters.length)]);
+            }
+            for (let i = 0; i < Math.floor(Math.random() * 3) + 2; i++) {
+                passwordList.push(numbers[Math.floor(Math.random() * numbers.length)]);
+            }
+            for (let i = 0; i < Math.floor(Math.random() * 3) + 2; i++) {
+                passwordList.push(symbols[Math.floor(Math.random() * symbols.length)]);
+            }
+            passwordList.sort(() => 0.5 - Math.random());
+            const password = passwordList.join('');
+            document.getElementById("password").value = password;
+        }
+
+        async function updateData(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = {
+                website: form.website.value,
+                email: form.email.value,
+                password: form.password.value
+            };
+
+            const response = await fetch('/update', {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.text();
+            alert(result);
+        }
+
+        async function deleteData(event) {
+            event.preventDefault();
+            const form = event.target;
+            const data = {
+                website: form.website.value,
+                password: form.password.value
+            };
+
+            const response = await fetch('/delete', {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.text();
+            alert(result);
+        }
+    </script>
+</head>
+<body>
+    <h1>Password Manager</h1>
+
+    <!-- Save Form -->
+    <form action="/save" method="post">
+        <h2>Save Password</h2>
+        <label>Website:</label>
+        <input type="text" name="website" required>
+        <label>Email/Username:</label>
+        <input type="email" name="email" value="nishant23@gmail.com">
+        <label>Password:</label>
+        <input type="text" name="password" id="password" required>
+        <button type="button" onclick="generatePassword()">Generate Password</button><br>
+        <input type="submit" value="Save">
+    </form>
+
+    <!-- Search Form -->
+    <form action="/find" method="get">
+        <h2>Search Password</h2>
+        <label>Website:</label>
+        <input type="text" name="website" required>
+        <input type="submit" value="Search">
+    </form>
+
+    <!-- Update Form -->
+    <form onsubmit="updateData(event)">
+        <h2>Update Password</h2>
+        <label>Website:</label>
+        <input type="text" name="website" required>
+        <label>New Email:</label>
+        <input type="email" name="email" required>
+        <label>New Password:</label>
+        <input type="text" name="password" required>
+        <input type="submit" value="Update">
+    </form>
+
+    <!-- Delete Form -->
+    <form onsubmit="deleteData(event)">
+        <h2>Delete Password</h2>
+        <label>Website:</label>
+        <input type="text" name="website" required>
+        <label>Password:</label>
+        <input type="text" name="password" required>
+        <input type="submit" value="Delete">
+    </form>
+
+    {% if result %}
+        <div class="result">
+            <h3>Result:</h3>
+            <p><strong>Email:</strong> {{ result.email }}</p>
+            <p><strong>Password:</strong> {{ result.password }}</p>
+        </div>
+    {% elif message %}
+        <div class="message">
+            <p>{{ message }}</p>
+        </div>
+    {% elif error %}
+        <div class="error">
+            <p>{{ error }}</p>
+        </div>
+    {% endif %}
+</body>
+</html>
